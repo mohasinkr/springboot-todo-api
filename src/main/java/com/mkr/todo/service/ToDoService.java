@@ -1,42 +1,50 @@
 package com.mkr.todo.service;
 
 import com.mkr.todo.model.ToDo;
-import com.mkr.todo.repository.ToDoRepository;
+import com.mkr.todo.repository.TodoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ToDoService {
-    private final ToDoRepository toDoRepository;
 
-    public ToDoService(ToDoRepository toDoRepository) {
-        this.toDoRepository = toDoRepository;
+    private final TodoRepository todoRepository;
+    private final LoggerService loggerService = LoggerService.getInstance();
+
+    @Autowired
+    public ToDoService(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
     }
 
+
     public List<ToDo> getAllTodos() {
-        return toDoRepository.findAll();
+        return todoRepository.findAll();
     }
 
     public Optional<ToDo> getTodoById(Long id) {
-        return toDoRepository.findById(id);
+        return todoRepository.findById(id);
     }
 
     public ToDo createTodo(ToDo toDo) {
-        return toDoRepository.save(toDo);
-    }
-
-    public ToDo updateTodo(Long id, ToDo updatedToDo) {
-        return toDoRepository.findById(id)
-                .map(todo -> {
-                    todo.setTitle(updatedToDo.getTitle());
-                    todo.setCompleted(updatedToDo.isCompleted());
-                    return toDoRepository.save(todo);
-                })
-                .orElseThrow(() -> new RuntimeException("ToDo not found"));
+        loggerService.log("Creating ToDo: " + toDo.getTitle());
+        return todoRepository.save(toDo);
     }
 
     public void deleteTodoById(Long id) {
-        toDoRepository.deleteById(id);
+        todoRepository.deleteById(id);
+    }
+
+    public ToDo updateTodo(Long id, ToDo updatedToDo) {
+        return todoRepository.findById(id)
+                .map(todo -> {
+                    todo.setTitle(updatedToDo.getTitle());
+                    todo.setDescription(updatedToDo.getDescription());
+                    todo.setCompleted(updatedToDo.isCompleted());
+                    return todoRepository.save(todo);
+                })
+                .orElseThrow(() -> new RuntimeException("ToDo not found"));
     }
 }

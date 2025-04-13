@@ -2,54 +2,48 @@ package com.mkr.todo.controller;
 
 import com.mkr.todo.model.ToDo;
 import com.mkr.todo.service.ToDoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/todos")
+@RequestMapping("/api/v1/todos")
 public class ToDoController {
-    private final ToDoService toDoService;
 
-    public ToDoController(ToDoService toDoService) {
-        this.toDoService = toDoService;
+    private ToDoService todoService;
+
+    @Autowired
+    public void TodoController(ToDoService todoservice) {
+        this.todoService = todoservice;
     }
 
     @GetMapping
     public List<ToDo> getAllTodos() {
-        return toDoService.getAllTodos();
+        return todoService.getAllTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ToDo> getTodoById(@PathVariable Long id) {
-        return toDoService.getTodoById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ToDo createTodo(@RequestBody ToDo toDo) {
-        return toDoService.createTodo(toDo);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ToDo> updateTodo(@PathVariable Long id, @RequestBody ToDo updatedToDo) {
-        try {
-            return ResponseEntity.ok(toDoService.updateTodo(id, updatedToDo));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public Optional<ToDo> getTodoById(@PathVariable Long id) {
+        return todoService.getTodoById(id);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTodoById(@PathVariable Long id) {
-        toDoService.deleteTodoById(id);
-        return ResponseEntity.noContent().build();
+    public void deleteTodoById(@PathVariable Long id) {
+        todoService.deleteTodoById(id);
     }
 
-    @GetMapping("/hello-world")
-    public String helloWorld() {
-        return "hello world";
+    @PostMapping
+    public ResponseEntity<ToDo> createTodo(@RequestBody ToDo newTodo) {
+        ToDo created = todoService.createTodo(newTodo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ToDo updateTodo(@PathVariable Long id, @RequestBody ToDo todo) {
+        return todoService.updateTodo(id, todo);
     }
 }
